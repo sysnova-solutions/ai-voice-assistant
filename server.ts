@@ -481,6 +481,15 @@ const getCustomerSessionSecret = () =>
   process.env.CUSTOMER_SESSION_SECRET ||
   process.env.OWNER_SESSION_SECRET ||
   deriveFallbackSessionSecret("customer");
+const getOwnerEmail = () => process.env.OWNER_EMAIL;
+const getOwnerUsername = () => process.env.OWNER_USERNAME;
+
+const matchesOwnerIdentifier = (value: string) => {
+  const normalized = String(value || "").trim().toLowerCase();
+  const ownerEmail = String(getOwnerEmail() || "").trim().toLowerCase();
+  const ownerUsername = String(getOwnerUsername() || "").trim().toLowerCase();
+  return Boolean(normalized && (normalized === ownerEmail || normalized === ownerUsername));
+};
 
 const signOwnerSession = (email: string) => {
   const secret = getOwnerSessionSecret();
@@ -510,7 +519,7 @@ const verifyOwnerSession = (token: string | null): OwnerSession | null => {
   try {
     const session = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8")) as OwnerSession;
     if (!session.email || !session.expires || session.expires < Date.now()) return null;
-    if (process.env.OWNER_EMAIL && session.email !== process.env.OWNER_EMAIL) return null;
+    if (!matchesOwnerIdentifier(session.email)) return null;
     return session;
   } catch {
     return null;
@@ -711,26 +720,27 @@ app.get("/api/auth/owner/me", (req, res) => {
 
 // Owner Login Endpoint
 app.post("/api/auth/owner/login", (req, res) => {
-  const { email, password } = req.body;
-  const ownerEmail = process.env.OWNER_EMAIL;
+  const identifier = String(req.body.email || req.body.username || req.body.identifier || "").trim();
+  const ownerEmail = getOwnerEmail();
+  const ownerUsername = getOwnerUsername();
   const ownerPassword = process.env.OWNER_PASSWORD;
   const ownerSessionSecret = getOwnerSessionSecret();
 
-  if (!ownerEmail || !ownerPassword || !ownerSessionSecret) {
+  if ((!ownerEmail && !ownerUsername) || !ownerPassword || !ownerSessionSecret) {
     return res.status(500).json({ 
       success: false, 
-      error: "Owner credentials are not configured on the server. Please define OWNER_EMAIL, OWNER_PASSWORD, and OWNER_SESSION_SECRET in the environment variables." 
+      error: "Owner credentials are not configured on the server. Please define OWNER_EMAIL or OWNER_USERNAME, plus OWNER_PASSWORD and OWNER_SESSION_SECRET in the environment variables." 
     });
   }
 
-  if (email === ownerEmail && password === ownerPassword) {
-    const token = signOwnerSession(ownerEmail);
+  if (matchesOwnerIdentifier(identifier) && password === ownerPassword) {
+    const token = signOwnerSession(ownerEmail || ownerUsername || identifier);
     if (!token) {
       return res.status(500).json({ success: false, error: "Owner session signing is not configured." });
     }
     setOwnerSessionCookie(res, token);
     
-    return res.json({ success: true, token, email: ownerEmail });
+    return res.json({ success: true, token, email: ownerEmail || ownerUsername || identifier });
   }
 
   return res.status(401).json({ success: false, error: "Invalid credentials. Access denied." });
@@ -738,23 +748,24 @@ app.post("/api/auth/owner/login", (req, res) => {
 
 // Legacy login redirecting to new secure flow (no hardcoded credentials)
 app.post("/api/admin/login", (req, res) => {
-  const { email, password } = req.body;
-  const ownerEmail = process.env.OWNER_EMAIL;
+  const identifier = String(req.body.email || req.body.username || req.body.identifier || "").trim();
+  const ownerEmail = getOwnerEmail();
+  const ownerUsername = getOwnerUsername();
   const ownerPassword = process.env.OWNER_PASSWORD;
   const ownerSessionSecret = getOwnerSessionSecret();
 
-  if (!ownerEmail || !ownerPassword || !ownerSessionSecret) {
+  if ((!ownerEmail && !ownerUsername) || !ownerPassword || !ownerSessionSecret) {
     return res.status(500).json({ success: false, error: "Owner credentials are not configured on the server." });
   }
 
-  if (email === ownerEmail && password === ownerPassword) {
-    const token = signOwnerSession(ownerEmail);
+  if (matchesOwnerIdentifier(identifier) && password === ownerPassword) {
+    const token = signOwnerSession(ownerEmail || ownerUsername || identifier);
     if (!token) {
       return res.status(500).json({ success: false, error: "Owner session signing is not configured." });
     }
     setOwnerSessionCookie(res, token);
     
-    return res.json({ success: true, token, email: ownerEmail });
+    return res.json({ success: true, token, email: ownerEmail || ownerUsername || identifier });
   }
 
   return res.status(401).json({ success: false, error: "Invalid credentials." });

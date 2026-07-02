@@ -1707,13 +1707,13 @@ export default function App() {
 
             <form onSubmit={handleAdminLogin} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-zinc-500 block mb-1">Owner Email</label>
+                <label className="text-xs font-bold text-zinc-500 block mb-1">Admin Email or Username</label>
                 <input
-                  type="email"
+                  type="text"
                   required
                   value={adminEmail}
                   onChange={e => setAdminEmail(e.target.value)}
-                  placeholder="owner@sysnovasolutions.com"
+                  placeholder="owner@sysnovasolutions.com or abdul-haseeb-sales"
                   className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 text-sm text-zinc-800 focus:outline-none focus:bg-white"
                 />
               </div>
