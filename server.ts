@@ -456,8 +456,31 @@ const OWNER_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 type CustomerSession = { id: string; email: string; name: string; phone: string; expires: number };
 const CUSTOMER_SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
-const getOwnerSessionSecret = () => process.env.OWNER_SESSION_SECRET;
-const getCustomerSessionSecret = () => process.env.CUSTOMER_SESSION_SECRET || process.env.OWNER_SESSION_SECRET;
+const deriveFallbackSessionSecret = (scope: "owner" | "customer") => {
+  const seedParts = [
+    process.env.APP_URL,
+    process.env.VERCEL_URL,
+    process.env.OWNER_EMAIL,
+    process.env.OWNER_PASSWORD,
+    process.env.SUPABASE_URL,
+    scope
+  ].filter(Boolean);
+
+  if (seedParts.length === 0) {
+    return `sysnovaai-${scope}-session-fallback`;
+  }
+
+  return crypto
+    .createHash("sha256")
+    .update(seedParts.join("|"))
+    .digest("hex");
+};
+
+const getOwnerSessionSecret = () => process.env.OWNER_SESSION_SECRET || deriveFallbackSessionSecret("owner");
+const getCustomerSessionSecret = () =>
+  process.env.CUSTOMER_SESSION_SECRET ||
+  process.env.OWNER_SESSION_SECRET ||
+  deriveFallbackSessionSecret("customer");
 
 const signOwnerSession = (email: string) => {
   const secret = getOwnerSessionSecret();
