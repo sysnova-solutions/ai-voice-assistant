@@ -1,0 +1,6 @@
+{
+  "name": "SysnovaAi",
+  "description": "SysnovaAi is an AI voice operations dashboard by Sysnova Solutions for customer conversations, automations, and real-time service workflows.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
