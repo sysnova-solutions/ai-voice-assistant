@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "node ./node_modules/vite/bin/vite.js build && node ./node_modules/esbuild/bin/esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "node \"./node_modules/vite/bin/vite.js\" build && node ./scripts/build-server.mjs",
     "start": "cross-env NODE_ENV=production node dist/server.cjs",
     "clean": "powershell -NoProfile -Command \"if (Test-Path dist) { Remove-Item -Recurse -Force dist }; if (Test-Path server.js) { Remove-Item -Force server.js }\"",
     "lint": "tsc --noEmit"
