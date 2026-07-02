@@ -1079,7 +1079,7 @@ export default function App() {
                             required
                             value={customerName}
                             onChange={e => setCustomerName(e.target.value)}
-                            placeholder="Muhammad Khurram"
+                            placeholder="Name"
                             className="w-full bg-black/70 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:bg-black focus:border-red-500 focus:ring-1 focus:ring-red-500/40"
                           />
                         </div>
@@ -1725,7 +1725,7 @@ export default function App() {
                   required
                   value={adminPassword}
                   onChange={e => setAdminPassword(e.target.value)}
-                  placeholder="Password (type 'admin' to bypass)"
+                  placeholder="Enter your password"
                   className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 text-sm text-zinc-800 focus:outline-none focus:bg-white"
                 />
               </div>
